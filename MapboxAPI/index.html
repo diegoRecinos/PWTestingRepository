@@ -7,19 +7,23 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.15.0/mapbox-gl.css" rel="stylesheet">
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    h1 { margin-top: 20px; text-align: center; }
     #map { width: 100%; height: 400px; }
     form { margin: 20px; text-align: center; }
-    pre { background-color: #f4f4f4; padding: 10px; margin: 20px; white-space: pre-wrap; }
+    input[type="text"], textarea { width: 300px; padding: 10px; margin-right: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    button { padding: 10px 20px; border: none; background-color: #007bff; color: white; border-radius: 5px; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    pre { background-color: #f4f4f4; padding: 10px; margin: 20px; white-space: pre-wrap; word-wrap: break-word; }
   </style>
 </head>
 <body>
-  <h1 style="text-align: center;">Geocoding con Mapbox</h1>
+  <h1>Geocoding con Mapbox</h1>
   <form id="location-form">
-    <input type="text" id="address" placeholder="Ejemplo: San Salvador, El Salvador" style="width: 300px; padding: 5px;">
+    <input type="text" id="address" placeholder="Ejemplo: San Salvador, El Salvador" required>
     <button type="submit">Buscar</button>
   </form>
   <div id="map"></div>
-  <pre id="output"></pre>
+  <textarea id="coordinates" rows="4" placeholder="Coordenadas aparecerán aquí..." readonly></textarea>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mapbox-gl/2.15.0/mapbox-gl.js"></script>
   <script>
@@ -36,6 +40,7 @@
 
     const form = document.getElementById('location-form');
     const output = document.getElementById('output');
+    const coordinatesTextarea = document.getElementById('coordinates');
     let marker;
 
     form.addEventListener('submit', async (e) => {
@@ -53,9 +58,13 @@
           const placeName = location.place_name;
 
           output.textContent = `Dirección: ${placeName}\nLatitud: ${coordinates[1]}\nLongitud: ${coordinates[0]}`;
+
           if (marker) marker.remove();
           marker = new mapboxgl.Marker().setLngLat(coordinates).addTo(map);
           map.flyTo({ center: coordinates, zoom: 14 });
+
+          // Guardar las coordenadas en el textarea
+          coordinatesTextarea.value = `Latitud: ${coordinates[1]}\nLongitud: ${coordinates[0]}`;
         } else {
           output.textContent = 'No se encontraron resultados.';
         }
@@ -63,6 +72,19 @@
         console.error('Error:', error);
         output.textContent = 'Ocurrió un error. Revisa la consola para más detalles.';
       }
+    });
+
+    // Agregar evento de clic en el mapa
+    map.on('click', (e) => {
+      const coordinates = e.lngLat;
+      
+      // Actualizar el marcador y el textarea con las nuevas coordenadas
+      if (marker) marker.remove();
+      marker = new mapboxgl.Marker().setLngLat(coordinates).addTo(map);
+      map.flyTo({ center: coordinates, zoom: 14 });
+
+      // Mostrar las coordenadas en el textarea
+      coordinatesTextarea.value = `Latitud: ${coordinates.lat}\nLongitud: ${coordinates.lng}`;
     });
   </script>
 </body>
